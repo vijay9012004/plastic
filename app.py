@@ -15,7 +15,7 @@ with open(os.path.join(BASE_DIR, "plastic.pkl"), "rb") as f:
     model = pickle.load(f)
 
 # Load saved LabelEncoder for Entity
-with open(os.path.join(BASE_DIR, "entity_encoder.pkl"), "rb") as f:
+with open(os.path.join(BASE_DIR, "plastic.pkl"), "rb") as f:
     le_entity = pickle.load(f)
 
 # User inputs
