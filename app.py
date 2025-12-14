@@ -9,16 +9,25 @@ import os
 
 st.title("Plastic Waste Category Prediction")
 
-# Check if the model already exists
-if os.path.exists("plastic.pkl"):
-    # Load existing model
-    with open("plastic.pkl", "rb") as f:
-        LR, le_Entity, salf = pickle.load(f)
-    st.success("Loaded existing trained model (plastic.pkl)")
-else:
-    # Upload CSV
+def load_model():
+    """Try to load existing pickle file, return None if invalid."""
+    if os.path.exists("plastic.pkl"):
+        try:
+            with open("plastic.pkl", "rb") as f:
+                LR, le_Entity, salf = pickle.load(f)
+            st.success("Loaded existing trained model (plastic.pkl)")
+            return LR, le_Entity, salf
+        except Exception as e:
+            st.warning(f"Failed to load pickle: {e}. Re-training required.")
+            os.remove("plastic.pkl")  # Remove invalid pickle
+    return None, None, None
+
+# Try to load model
+LR, le_Entity, salf = load_model()
+
+# If no valid model, upload CSV and train
+if LR is None:
     uploaded_file = st.file_uploader("Upload CSV file", type="csv")
-    
     if uploaded_file is not None:
         salf = pd.read_csv(uploaded_file)
         st.write("Dataset loaded successfully!")
@@ -28,9 +37,9 @@ else:
         le_Entity = LabelEncoder()
         salf['Entity_encoded'] = le_Entity.fit_transform(salf['Entity'])
 
-        # Convert continuous target into categories
+        # Convert target into categories
         salf['Plastic_category'] = pd.qcut(
-            salf['Plastic waste generation (tonnes, total)'], 
+            salf['Plastic waste generation (tonnes, total)'],
             q=3, labels=[0,1,2]
         )
 
@@ -42,7 +51,7 @@ else:
         LR = LogisticRegression(max_iter=1000)
         LR.fit(X, y)
 
-        # Save model for future use
+        # Save model, encoder, and dataset together
         with open("plastic.pkl", "wb") as f:
             pickle.dump((LR, le_Entity, salf), f)
         st.success("Model trained and saved as plastic.pkl")
@@ -53,9 +62,9 @@ else:
 # Select country and year for prediction
 country = st.selectbox("Select Country", salf['Entity'].unique())
 year = st.number_input(
-    "Enter Year", 
-    min_value=int(salf['Year'].min()), 
-    max_value=int(salf['Year'].max()), 
+    "Enter Year",
+    min_value=int(salf['Year'].min()),
+    max_value=int(salf['Year'].max()),
     value=2023
 )
 
