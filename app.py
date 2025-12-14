@@ -1,5 +1,3 @@
-# plastic_app.py
-
 import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
@@ -61,11 +59,17 @@ if LR is None:
 
 # Select country and year for prediction
 country = st.selectbox("Select Country", salf['Entity'].unique())
+
+# Fix for StreamlitValueAboveMaxError
+min_year = int(salf['Year'].min())
+max_year = int(salf['Year'].max())
+default_year = max_year if max_year < 2023 else 2023
+
 year = st.number_input(
     "Enter Year",
-    min_value=int(salf['Year'].min()),
-    max_value=int(salf['Year'].max()),
-    value=2023
+    min_value=min_year,
+    max_value=max_year,
+    value=default_year
 )
 
 # Encode country
