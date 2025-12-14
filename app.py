@@ -1,6 +1,4 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 import pickle
 import os
 
@@ -29,8 +27,7 @@ entity_enc = le_entity.transform([entity])[0]
 # Predict button
 if st.button("Predict Plastic Waste"):
     prediction = model.predict([[entity_enc, year]])
-    st.success(f"Predicted Plastic Waste: **{prediction[0]:,.2f} tonnes**")
+    st.success(f"Predicted Plastic Waste: {prediction[0]:,.2f} tonnes")
 
 st.markdown("---")
 st.caption("Model: Logistic Regression | Dataset: Plastic Waste Generation")
-
