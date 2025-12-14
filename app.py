@@ -10,13 +10,12 @@ BASE_DIR = os.path.dirname(__file__)
 
 # Paths to model and encoder
 model_path = os.path.join(BASE_DIR, "plastic.pkl")
-encoder_path = os.path.join(BASE_DIR, "entity_encoder.pkl")
+
 
 # Check if files exist
 if not os.path.exists(model_path):
     st.error(f"Model file not found: {model_path}")
-elif not os.path.exists(encoder_path):
-    st.error(f"Encoder file not found: {encoder_path}")
+
 else:
     # Load model and encoder
     with open(model_path, "rb") as f:
