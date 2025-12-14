@@ -1,33 +1,47 @@
+# plastic_logistic.py
+
 import streamlit as st
-import pickle
-import os
+import pandas as pd
 from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import LogisticRegression
+import pickle
 
-st.set_page_config(page_title="Plastic Waste Prediction", layout="centered")
-st.title("🗑️ Plastic Waste Prediction App")
+# Load dataset
+salf = pd.read_csv("plastic-waste-generation2.csv")
 
-BASE_DIR = os.path.dirname(__file__)
-model_path = os.path.join(BASE_DIR, "plastic.pkl")
+# Encode country names
+le_Entity = LabelEncoder()
+salf['Entity_encoded'] = le_Entity.fit_transform(salf['Entity'])
 
-if not os.path.exists(model_path):
-    st.error(f"Model file not found: {model_path}")
-else:
-    # Load model + classes
-    with open(model_path, "rb") as f:
-        data = pickle.load(f)
-    
-    model = data['model']
-    le_entity = LabelEncoder()
-    le_entity.classes_ = data['classes']
+# Convert continuous plastic waste into 3 categories
+salf['Plastic_category'] = pd.qcut(
+    salf['Plastic waste generation (tonnes, total)'], 
+    q=3, labels=[0,1,2]
+)
 
-    # User input
-    entity = st.selectbox("Select Country/Entity", le_entity.classes_)
-    year = st.number_input("Enter Year", min_value=1950, max_value=2100, value=2020)
-    entity_enc = le_entity.transform([entity])[0]
+# Features and target
+X = salf[['Entity_encoded', 'Year']]
+y = salf['Plastic_category']
 
-    if st.button("Predict Plastic Waste"):
-        prediction = model.predict([[entity_enc, year]])
-        st.success(f"Predicted Plastic Waste: {prediction[0]:,.2f} tonnes")
+# Train Logistic Regression
+LR = LogisticRegression(max_iter=1000)
+LR.fit(X, y)
 
-st.markdown("---")
-st.caption("Model: Logistic Regression | Dataset: Plastic Waste Generation")
+# Streamlit UI
+st.title("Plastic Waste Category Prediction")
+
+country = st.selectbox("Select Country", salf['Entity'].unique())
+year = st.number_input("Enter Year", min_value=int(salf['Year'].min()), max_value=int(salf['Year'].max()), value=2023)
+
+# Encode country
+country_encoded = le_Entity.transform([country])[0]
+
+# Predict category
+pred_cat = LR.predict([[country_encoded, year]])[0]
+category_name = {0:"Low", 1:"Medium", 2:"High"}[pred_cat]
+
+st.success(f"Predicted Plastic Waste Category: {category_name}")
+
+# Save model
+with open("plastic_logistic_model.pkl", "wb") as f:
+    pickle.dump(LR, f)
